@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driving Licenses</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .license {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        
+        .captcha {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007BFF;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Driving Licenses</h1>
+        <p>Enter License Number</p>
+        <input type="text" id="licenseNumber" placeholder="Enter license number"><br><br>
+        <div class="captcha" id="captcha"></div>
+        <input type="text" id="captchaInput" placeholder="Enter CAPTCHA"><br><br>
+        <button onclick="getLicenseInfo()">Get License Info</button>
+        <div id="licenseInfo"></div>
+    </div>
+
+    <script>
+        function generateCaptcha() {
+            const captchaText = Math.random().toString(36).substring(2, 8);
+            document.getElementById('captcha').textContent = captchaText;
+        }
+
+        function getLicenseInfo() {
+            const licenseNumber = document.getElementById('licenseNumber').value;
+            const captchaInput = document.getElementById('captchaInput').value;
+            const captchaText = document.getElementById('captcha').textContent;
+
+            if (!licenseNumber) {
+                alert('Please enter a license number');
+                return;
+            }
+
+            if (captchaInput !== captchaText) {
+                alert('Incorrect CAPTCHA');
+                return;
+            }
+
+            const url = `http://localhost:5000/api/driving_licenses/${licenseNumber}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const licenseInfoDiv = document.getElementById('licenseInfo');
+                    licenseInfoDiv.innerHTML = '';
+                    if (data.error) {
+                        licenseInfoDiv.className = 'error';
+                        licenseInfoDiv.innerHTML = data.error;
+                    } else {
+                        licenseInfoDiv.className = 'license';
+                        licenseInfoDiv.innerHTML = `<strong>ID:</strong> ${data.id}<br>
+                                                    <strong>Name:</strong> ${data.name}<br>
+                                                    <strong>License Number:</strong> ${data.license_number}<br>
+                                                    <strong>Expiry Date:</strong> ${data.expiry_date}`;
+                    }
+                })
+                .catch(error => {
+                    const licenseInfoDiv = document.getElementById('licenseInfo');
+                    licenseInfoDiv.className = 'error';
+                    licenseInfoDiv.innerHTML = 'Error fetching license: ' + error.message;
+                    console.error('Error fetching license:', error);
+                });
+        }
+
+
+        window.onload = generateCaptcha;
+    </script>
+</body>
+
+</html>
